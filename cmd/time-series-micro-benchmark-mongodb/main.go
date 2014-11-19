@@ -47,7 +47,7 @@ func getSession() (*mgo.Session, error) {
 func main() {
 	session, err := getSession()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("get session error: %v", err)
 	}
 
 	db := session.DB("time-series-micro-benchmark")
@@ -72,25 +72,27 @@ func main() {
 		DropDups: true,
 	}
 	if err = c.EnsureIndex(index); err != nil {
-		log.Fatal(err)
+		log.Fatalf("ensure index error: %v", err)
 	}
 
 	// Ensure your design works if scale changes by 10X or 20X but the right
 	// solution for X often not optimal for 100X.
 	// http://static.googleusercontent.com/media/research.google.com/en/us/people/jeff/stanford-295-talk.pdf
-	for i := 0; i < 20*tsmb.QUERIES_PER_WEEK; i++ {
-		t.RandomRange(func(min, max time.Time) {
-			pipe := c.Pipe([]bson.M{
-				bson.M{"$match": bson.M{"time": bson.M{"$gt": min, "$lt": max}}},
-				bson.M{"$group": bson.M{"_id": nil, "count": bson.M{"$sum": "$count"}}},
+	log.Printf("querying events took: %v", tsmb.TimeIt(func() {
+		for i := 0; i < 20*tsmb.QUERIES_PER_WEEK; i++ {
+			t.RandomRange(func(min, max time.Time) {
+				pipe := c.Pipe([]bson.M{
+					bson.M{"$match": bson.M{"time": bson.M{"$gt": min, "$lt": max}}},
+					bson.M{"$group": bson.M{"_id": nil, "total": bson.M{"$sum": "$count"}}},
+				})
+				var result struct {
+					Total int64 `bson:"total"`
+				}
+				if err = pipe.One(&result); err != nil {
+					log.Printf("pipe error: %v", err)
+				}
+				// log.Printf("total: %v", result.Total)
 			})
-			var result struct {
-				Count int64 `bson:"count"`
-			}
-			if err = pipe.One(&result); err != nil {
-				log.Fatal(err)
-			}
-			log.Printf("count: %v", result.Count)
-		})
-	}
+		}
+	}))
 }

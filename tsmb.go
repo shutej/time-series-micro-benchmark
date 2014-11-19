@@ -9,7 +9,10 @@ import (
 const QUERIES_PER_WEEK = 1000
 
 const MAX_COUNT = 100
-const INTERVAL = 30 * 7 * 24 * time.Hour // 1 month
+
+// const INTERVAL = 30 * 7 * 24 * time.Hour // 1 month
+const INTERVAL = 7 * 24 * time.Hour // 1 week
+// const INTERVAL = 24 * time.Hour // 1 day
 
 type Record struct {
 	T     time.Time `bson:"time"`
@@ -70,7 +73,7 @@ func (self *T) EverySecond(fn func(time.Time)) {
 	}
 }
 
-func (self *T) RandomRange(fn func(from, to time.Time)) {
+func (self *T) RandomRange(fn func(min, max time.Time)) {
 	back := int64(INTERVAL.Nanoseconds())
 	a, b := rand.Int63n(back), rand.Int63n(back)
 	var min, max int64
@@ -81,7 +84,7 @@ func (self *T) RandomRange(fn func(from, to time.Time)) {
 		min = b
 		max = a
 	}
-	fn(self.N.Add(-time.Duration(min)), self.N.Add(-time.Duration(max)))
+	fn(self.N.Add(-time.Duration(max)), self.N.Add(-time.Duration(min)))
 }
 
 func TimeIt(fn func()) time.Duration {
