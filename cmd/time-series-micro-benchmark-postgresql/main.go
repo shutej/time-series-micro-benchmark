@@ -11,7 +11,9 @@ import (
 	tsmb "github.com/shutej/time-series-micro-benchmark"
 )
 
-const DROP = `DROP TABLE IF EXISTS TimeSeriesMicroBenchmark CASCADE`
+const DROP = `
+DROP TABLE IF EXISTS TimeSeriesMicroBenchmark CASCADE
+`
 
 const CREATE = `CREATE TABLE TimeSeriesMicroBenchmark (
   time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -21,8 +23,16 @@ const CREATE = `CREATE TABLE TimeSeriesMicroBenchmark (
   PRIMARY KEY (time, rand)
 )`
 
-const INSERT = `INSERT INTO TimeSeriesMicroBenchmark (
-    time, rand, name, count) VALUES ($1, $2, $3, $4)`
+const INSERT = `
+INSERT INTO TimeSeriesMicroBenchmark (time, rand, name, count)
+     VALUES ($1, $2, $3, $4)
+`
+
+const SELECT = `
+SELECT SUM(count)
+  FROM TimeSeriesMicroBenchmark
+ WHERE time BETWEEN $1 AND $2
+`
 
 func main() {
 	db, err := sql.Open("postgres", os.Getenv("POSTGRESQL_URI"))
@@ -49,4 +59,20 @@ func main() {
 		})
 	}))
 
+	select_, err := db.Prepare(SELECT)
+	if err != nil {
+		log.Fatalf("error preparing select: %v", err)
+	}
+
+	log.Printf("querying events took: %v", tsmb.TimeIt(func() {
+		for i := 0; i < tsmb.SAMPLE_SIZE; i++ {
+			t.RandomRange(func(min, max time.Time) {
+				row := select_.QueryRow(min, max)
+				var result int64
+				if err := row.Scan(&result); err != nil {
+					log.Fatalf("error scanning result: %v", err)
+				}
+			})
+		}
+	}))
 }

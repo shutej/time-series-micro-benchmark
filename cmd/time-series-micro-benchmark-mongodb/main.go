@@ -79,7 +79,7 @@ func main() {
 	// solution for X often not optimal for 100X.
 	// http://static.googleusercontent.com/media/research.google.com/en/us/people/jeff/stanford-295-talk.pdf
 	log.Printf("querying events took: %v", tsmb.TimeIt(func() {
-		for i := 0; i < 20*tsmb.QUERIES_PER_WEEK; i++ {
+		for i := 0; i < tsmb.SAMPLE_SIZE; i++ {
 			t.RandomRange(func(min, max time.Time) {
 				pipe := c.Pipe([]bson.M{
 					bson.M{"$match": bson.M{"time": bson.M{"$gt": min, "$lt": max}}},
