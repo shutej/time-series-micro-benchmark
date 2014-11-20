@@ -32,6 +32,8 @@ const SELECT = `
 SELECT SUM(count)
   FROM TimeSeriesMicroBenchmark
  WHERE time BETWEEN $1 AND $2
+   AND rand BETWEEN '00000000-0000-0000-0000-000000000000'
+                AND 'ffffffff-ffff-ffff-ffff-ffffffffffff'
 `
 
 func main() {
