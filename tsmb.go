@@ -11,8 +11,8 @@ const QUERIES_PER_WEEK = 1000
 const MAX_COUNT = 100
 
 // const INTERVAL = 30 * 7 * 24 * time.Hour // 1 month
-const INTERVAL = 7 * 24 * time.Hour // 1 week
-// const INTERVAL = 24 * time.Hour // 1 day
+// const INTERVAL = 7 * 24 * time.Hour // 1 week
+const INTERVAL = 24 * time.Hour // 1 day
 
 type Record struct {
 	T     time.Time `bson:"time"`
